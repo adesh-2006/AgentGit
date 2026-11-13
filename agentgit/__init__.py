@@ -36,12 +36,15 @@ from agentgit.replay import get_task_trace
 from agentgit.report import diff_to_html, diff_to_markdown
 from agentgit.snapshot import create_snapshot as snapshot
 from agentgit.storage import AgentGitStore
-from agentgit.tracker import track
+from agentgit.tracker import AsyncTrackedAgent, TrackedAgent, compute_prompt_hash, track
 from agentgit.ui import start_ui
 
 __all__ = [
     "__version__",
     "track",
+    "TrackedAgent",
+    "AsyncTrackedAgent",
+    "compute_prompt_hash",
     "snapshot",
     "diff",
     "ci_check",

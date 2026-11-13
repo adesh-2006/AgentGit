@@ -373,21 +373,39 @@ AgentGit doesn't change how your agent works. It just observes and measures.
 
 ---
 
-## 🗺️ Roadmap
+## 🗺️ Roadmap & Milestones
 
-- [x] Core tracker — wrap any callable
-- [x] Behavioral snapshots
-- [x] Behavioral diffs with polarity-aware scoring
-- [x] CI/CD gate (`agentgit ci-check`)
-- [x] OpenAI & Anthropic metric extraction
-- [x] Beautiful Rich terminal output
-- [ ] Web dashboard (interactive diff viewer)
-- [ ] Async agent support
-- [ ] LangChain/CrewAI deep integration
-- [ ] Snapshot comparison leaderboard
-- [ ] Prompt hash tracking
-- [ ] A/B testing mode
-- [ ] GitHub Action (official)
+### ✅ Phase 1: Core Behavioral Engine (Completed)
+- [x] Core tracker (`@track`) — wrap any callable
+- [x] Behavioral snapshots & persistence (`.agentgit/snapshots/`)
+- [x] Polarity-aware behavioral diff engine (detect improvements vs regressions)
+- [x] Multi-format reporting (Terminal UI, GitHub PR comments markdown, standalone HTML)
+- [x] CI/CD regression gate (`agentgit ci-check`)
+- [x] Official composite GitHub Action (`action.yml`)
+- [x] Full CLI suite (`init`, `snapshot`, `diff`, `list`, `show`, `rollback`, `ci-check`)
+
+### ✅ Phase 2: Advanced Diagnostics & Frameworks (Completed)
+- [x] Native async agent support (`AsyncTrackedAgent`, `asyncio`)
+- [x] Deep adapters: OpenAI, Anthropic, LangChain/LangGraph, CrewAI
+- [x] Prompt hash calculation & instruction tracking (`compute_prompt_hash`)
+- [x] Zero-dependency local interactive web dashboard (`agentgit ui`)
+- [x] Automated root-cause regression hunting (`agentgit bisect`)
+- [x] Behavioral attribution audit (`agentgit blame`)
+- [x] Multi-variant A/B comparison matrix & leaderboard (`agentgit matrix`)
+- [x] Time-travel trajectory debugger (`agentgit replay`)
+
+### ✅ Phase 3: Production & Analytics (Completed)
+- [x] Zero-cost offline VCR fixture caching & replay (`agentgit mock`)
+- [x] Static prompt & tool contract linter (`agentgit lint`)
+- [x] Semantic drift & polar contradiction detector (`agentgit drift`)
+- [x] Production scale & monthly budget simulator (`agentgit cost-predict`)
+- [x] Tabular trajectory exporter for data science (`agentgit export` to CSV / JSONL)
+- [x] Standard benchmark datasets (`agentgit/benchmarks/general_qa.json`, `tool_calling.json`)
+
+### 🔮 Future Horizons (v0.2.0+)
+- [ ] VS Code Extension for live inline prompt behavioral diffs
+- [ ] Cloud-hosted remote team registry (S3 / PostgreSQL backend)
+- [ ] Native OpenTelemetry distributed span exporter
 
 ---
 

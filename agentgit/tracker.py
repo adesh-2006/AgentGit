@@ -23,12 +23,19 @@ Usage::
 from __future__ import annotations
 
 import functools
+import hashlib
+import inspect
 import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
+
+
+def compute_prompt_hash(prompt_text: str) -> str:
+    """Compute deterministic SHA256 snippet for a prompt string."""
+    return hashlib.sha256(prompt_text.strip().encode("utf-8")).hexdigest()[:12]
 
 # ---------------------------------------------------------------------------
 # Data models
@@ -160,11 +167,19 @@ def _auto_extract(result: Any) -> Dict[str, Any]:
     # Anthropic
     if "anthropic" in module or cls_name == "message":
         return _extract_anthropic(result)
+    # LangChain / LangGraph
+    if "langchain" in module or "aimessage" in cls_name:
+        from agentgit.adapters.langchain_adapter import LangChainAdapter
+        return LangChainAdapter().extract_metrics(result)
+    # CrewAI
+    if "crewai" in module or "crewoutput" in cls_name:
+        from agentgit.adapters.crewai_adapter import CrewAIAdapter
+        return CrewAIAdapter().extract_metrics(result)
     return _extract_generic(result)
 
 
 # ---------------------------------------------------------------------------
-# TrackedAgent
+# TrackedAgent & AsyncTrackedAgent
 # ---------------------------------------------------------------------------
 
 class TrackedAgent:
@@ -176,17 +191,28 @@ class TrackedAgent:
         The original agent function/callable to wrap.
     name : str, optional
         Human-readable name for this agent.
+    prompt : str, optional
+        System prompt string (tracked via SHA256 prompt_hash).
     """
 
-    def __init__(self, fn: Callable, name: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        fn: Callable,
+        name: Optional[str] = None,
+        prompt: Optional[str] = None,
+    ) -> None:
         self._fn = fn
         self.name = name or getattr(fn, "__name__", "agent")
+        self.prompt = prompt
+        self.prompt_hash = compute_prompt_hash(prompt) if prompt else None
         self.records: List[InvocationRecord] = []
         functools.update_wrapper(self, fn)
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         """Invoke the wrapped agent, recording behavioral data."""
         record = InvocationRecord(input=args[0] if args else kwargs)
+        if self.prompt_hash:
+            record.metadata["prompt_hash"] = self.prompt_hash
 
         start = time.perf_counter()
         try:
@@ -228,6 +254,43 @@ class TrackedAgent:
         return f"TrackedAgent(name={self.name!r}, records={len(self.records)})"
 
 
+class AsyncTrackedAgent(TrackedAgent):
+    """Asynchronous wrapper around an async coroutine agent callable."""
+
+    async def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        """Asynchronously invoke the wrapped agent, recording behavioral data."""
+        record = InvocationRecord(input=args[0] if args else kwargs)
+        if self.prompt_hash:
+            record.metadata["prompt_hash"] = self.prompt_hash
+
+        start = time.perf_counter()
+        try:
+            result = await self._fn(*args, **kwargs)
+            record.output = _safe_serialize(result)
+            extracted = _auto_extract(result)
+            record.input_tokens = extracted.get("input_tokens", 0)
+            record.output_tokens = extracted.get("output_tokens", 0)
+            record.total_tokens = extracted.get(
+                "total_tokens",
+                record.input_tokens + record.output_tokens,
+            )
+            record.model = extracted.get("model", "")
+            record.tools_called = extracted.get("tools_called", [])
+            record.steps = max(1, len(record.tools_called))
+        except Exception as exc:
+            record.error = f"{type(exc).__name__}: {exc}"
+            record.output = None
+            raise
+        finally:
+            record.latency_ms = (time.perf_counter() - start) * 1000
+            record.cost_usd = _estimate_cost(
+                record.model, record.input_tokens, record.output_tokens
+            )
+            self.records.append(record)
+
+        return result
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -236,31 +299,22 @@ def track(
     fn: Optional[Callable] = None,
     *,
     name: Optional[str] = None,
-) -> Union[TrackedAgent, Callable]:
+    prompt: Optional[str] = None,
+) -> Union[TrackedAgent, AsyncTrackedAgent, Callable]:
     """Wrap *fn* so every call is recorded for behavioral analysis.
 
-    Can be used as a simple wrapper or as a decorator::
-
-        # Wrapper
-        agent = track(my_fn, name="researcher")
-
-        # Decorator
-        @track
-        def my_agent(task):
-            ...
-
-        # Decorator with args
-        @track(name="researcher")
-        def my_agent(task):
-            ...
+    Supports both synchronous and asynchronous (asyncio) agent callables.
     """
     if fn is None:
-        # Called with keyword args: @track(name="x")
-        def _decorator(f: Callable) -> TrackedAgent:
-            return TrackedAgent(f, name=name)
+        def _decorator(f: Callable) -> Union[TrackedAgent, AsyncTrackedAgent]:
+            if inspect.iscoroutinefunction(f):
+                return AsyncTrackedAgent(f, name=name, prompt=prompt)
+            return TrackedAgent(f, name=name, prompt=prompt)
         return _decorator
 
-    return TrackedAgent(fn, name=name)
+    if inspect.iscoroutinefunction(fn):
+        return AsyncTrackedAgent(fn, name=name, prompt=prompt)
+    return TrackedAgent(fn, name=name, prompt=prompt)
 
 
 # ---------------------------------------------------------------------------

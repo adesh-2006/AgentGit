@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from agentgit.adapters.anthropic_adapter import AnthropicAdapter
 from agentgit.adapters.base import BaseAdapter
+from agentgit.adapters.crewai_adapter import CrewAIAdapter
 from agentgit.adapters.generic_adapter import GenericAdapter
+from agentgit.adapters.langchain_adapter import LangChainAdapter
 from agentgit.adapters.openai_adapter import OpenAIAdapter
 
 __all__ = [
@@ -12,6 +14,8 @@ __all__ = [
     "GenericAdapter",
     "OpenAIAdapter",
     "AnthropicAdapter",
+    "LangChainAdapter",
+    "CrewAIAdapter",
     "detect_framework",
     "get_adapter",
 ]
@@ -20,7 +24,7 @@ __all__ = [
 def detect_framework(obj: object) -> str:
     """Detect which AI framework *obj* belongs to.
 
-    Returns one of ``"openai"``, ``"anthropic"``, ``"langchain"``, ``"generic"``.
+    Returns one of ``"openai"``, ``"anthropic"``, ``"langchain"``, ``"crewai"``, ``"generic"``.
     """
     module = getattr(type(obj), "__module__", "") or ""
 
@@ -28,8 +32,10 @@ def detect_framework(obj: object) -> str:
         return "openai"
     if "anthropic" in module:
         return "anthropic"
-    if "langchain" in module:
+    if "langchain" in module or "langgraph" in module:
         return "langchain"
+    if "crewai" in module:
+        return "crewai"
     return "generic"
 
 
@@ -38,6 +44,8 @@ def get_adapter(framework: str) -> BaseAdapter:
     adapters = {
         "openai": OpenAIAdapter,
         "anthropic": AnthropicAdapter,
+        "langchain": LangChainAdapter,
+        "crewai": CrewAIAdapter,
         "generic": GenericAdapter,
     }
     cls = adapters.get(framework, GenericAdapter)
