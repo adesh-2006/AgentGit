@@ -13,6 +13,12 @@
   <a href="https://pypi.org/project/agentgit/"><img src="https://img.shields.io/pypi/pyversions/agentgit" alt="Python"></a>
 </p>
 
+<p align="center">
+  <a href="USAGE_GUIDE.md"><strong>📖 Full Usage Guide & Tutorial</strong></a> •
+  <a href="LAUNCH_PLAYBOOK.md"><strong>🚀 500+ Star Launch Playbook</strong></a> •
+  <a href="#-quickstart"><strong>⚡ Quickstart</strong></a>
+</p>
+
 ---
 
 > You changed a prompt. You upgraded the model. You tweaked a tool.
