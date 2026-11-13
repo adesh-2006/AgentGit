@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentgit"
+version = "0.1.0"
+description = "Git for AI Agent Behavior — version, diff, and rollback how your agent behaves."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    { name = "Adesh", email = "adesh-2006@users.noreply.github.com" },
+]
+keywords = [
+    "ai", "agent", "llm", "testing", "evaluation",
+    "behavioral-testing", "versioning", "diff", "observability", "devtools",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "click>=8.0",
+    "rich>=13.0",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+openai = ["openai>=1.0"]
+anthropic = ["anthropic>=0.20"]
+langchain = ["langchain-core>=0.2"]
+all = ["openai>=1.0", "anthropic>=0.20", "langchain-core>=0.2"]
+dev = ["pytest>=7.0", "pytest-asyncio>=0.21", "ruff>=0.4"]
+
+[project.scripts]
+agentgit = "agentgit.cli:cli"
+
+[project.urls]
+Homepage = "https://github.com/adesh-2006/AgentGit"
+Documentation = "https://github.com/adesh-2006/AgentGit#readme"
+Repository = "https://github.com/adesh-2006/AgentGit"
+Issues = "https://github.com/adesh-2006/AgentGit/issues"
+
+[tool.ruff]
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
