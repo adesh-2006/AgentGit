@@ -22,11 +22,12 @@ Usage::
 
 __version__ = "0.1.0"
 
-from agentgit.tracker import track
-from agentgit.snapshot import create_snapshot as snapshot
-from agentgit.diff import create_diff as diff
-from agentgit.storage import AgentGitStore
 from agentgit.ci import ci_check
+from agentgit.diff import create_diff as diff
+from agentgit.report import diff_to_html, diff_to_markdown
+from agentgit.snapshot import create_snapshot as snapshot
+from agentgit.storage import AgentGitStore
+from agentgit.tracker import track
 
 __all__ = [
     "__version__",
@@ -34,5 +35,7 @@ __all__ = [
     "snapshot",
     "diff",
     "ci_check",
+    "diff_to_markdown",
+    "diff_to_html",
     "AgentGitStore",
 ]

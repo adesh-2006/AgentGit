@@ -1,0 +1,12 @@
+[
+  "Find the current weather in San Francisco and calculate the difference from Seattle.",
+  "Query the database for users who joined in the last 7 days and format as a table.",
+  "Search the company handbook for maternity leave policy and summarize the key clauses.",
+  "Fetch recent pull requests from github.com/owner/repo and list all PRs missing reviewers.",
+  "Calculate the 95th percentile latency from the server metrics API for the past hour.",
+  "Look up customer ticket #4819, check recent order status, and draft a resolution message.",
+  "Search internal knowledge base for deployment rollback procedures on production cluster.",
+  "Execute SQL query to verify inventory counts before processing bulk order #9921.",
+  "Scan file system for uncommitted git changes and alert on any files exceeding 50MB.",
+  "Parse incoming Stripe webhook payload and record payment intent status in database."
+]

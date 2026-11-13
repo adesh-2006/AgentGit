@@ -1,0 +1,12 @@
+[
+  "Summarize the quarterly financial report in 3 bullet points.",
+  "What are the main security considerations when exposing a GraphQL endpoint?",
+  "Draft an email explaining a 2-hour scheduled maintenance window to enterprise clients.",
+  "Compare PostgreSQL and DynamoDB for a real-time event analytics platform.",
+  "Write a concise troubleshooting guide for high memory usage in Python Celery workers.",
+  "Explain the difference between optimistic and pessimistic concurrency control.",
+  "How should we handle idempotency keys in payment processing webhooks?",
+  "Provide a checklist for migrating a legacy monolith to Kubernetes microservices.",
+  "Outline the trade-offs between dense retrieval and hybrid search in RAG pipelines.",
+  "What are the best practices for secret management in CI/CD pipelines?"
+]

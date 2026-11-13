@@ -9,6 +9,7 @@ from pathlib import Path
 from agentgit.tracker import track, TrackedAgent, InvocationRecord
 from agentgit.snapshot import create_snapshot, BehavioralSnapshot, save_snapshot, load_snapshot
 from agentgit.diff import create_diff, ChangeStatus
+from agentgit.report import diff_to_markdown, diff_to_html
 from agentgit.ci import parse_rules, ci_check
 from agentgit.storage import AgentGitStore
 
@@ -154,6 +155,26 @@ class TestDiff:
 
         diff = create_diff(snap_a, snap_b)
         assert "No significant" in diff.verdict
+
+    def test_diff_markdown_export(self):
+        agent = track(_dummy_agent)
+        snap_a = create_snapshot(agent, "v1", ["a"])
+        snap_b = create_snapshot(agent, "v2", ["a", "b"])
+        diff = create_diff(snap_a, snap_b)
+        md = diff_to_markdown(diff)
+        assert "AgentGit Behavioral Diff" in md
+        assert "| Metric | `v1` | `v2` |" in md
+        assert "Verdict:" in md
+
+    def test_diff_html_export(self):
+        agent = track(_dummy_agent)
+        snap_a = create_snapshot(agent, "v1", ["a"])
+        snap_b = create_snapshot(agent, "v2", ["a", "b"])
+        diff = create_diff(snap_a, snap_b)
+        html = diff_to_html(diff)
+        assert "<!DOCTYPE html>" in html
+        assert "AgentGit Behavioral Diff" in html
+        assert "kpi-card" in html
 
 
 # ---------------------------------------------------------------------------

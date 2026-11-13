@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from agentgit.adapters.anthropic_adapter import AnthropicAdapter
 from agentgit.adapters.base import BaseAdapter
 from agentgit.adapters.generic_adapter import GenericAdapter
 from agentgit.adapters.openai_adapter import OpenAIAdapter
-from agentgit.adapters.anthropic_adapter import AnthropicAdapter
 
 __all__ = [
     "BaseAdapter",

@@ -134,11 +134,17 @@ def my_custom_agent(task):
 # Initialize in your project
 agentgit init --name my-agent
 
-# Create snapshots
-agentgit snapshot v1.0 --tasks tasks.json
+# Create snapshots using built-in benchmarks or your own tasks
+agentgit snapshot v1.0 --tasks agentgit/benchmarks/tool_calling.json
 
-# See the diff
+# See the terminal diff
 agentgit diff v1.0 v2.0
+
+# Export as GitHub PR comment markdown
+agentgit diff v1.0 v2.0 --format markdown
+
+# Export as a standalone dark-mode HTML dashboard
+agentgit diff v1.0 v2.0 --format html -o diff_report.html
 
 # List all snapshots  
 agentgit list
@@ -151,6 +157,50 @@ agentgit rollback v1.0
 
 # CI/CD gate — fail the build if behavior regresses
 agentgit ci-check v2.0 --rules "task_completion >= 0.85 AND error_rate < 0.10"
+```
+
+---
+
+## 💬 Automated GitHub PR Comments
+
+Post behavioral diffs directly on pull requests whenever prompt or model changes are proposed:
+
+```yaml
+# .github/workflows/agent-diff.yml
+name: Agent Behavioral Diff
+
+on:
+  pull_request:
+    paths:
+      - 'prompts/**'
+      - 'agents/**'
+
+jobs:
+  behavior-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e .
+
+      - name: Generate Behavioral Diff
+        run: |
+          agentgit diff v1.0 v2.0 --format markdown > diff.md
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('diff.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
 ```
 
 ---

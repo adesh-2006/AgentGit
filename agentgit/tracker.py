@@ -24,13 +24,11 @@ from __future__ import annotations
 
 import functools
 import time
-import traceback
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
-
 
 # ---------------------------------------------------------------------------
 # Data models

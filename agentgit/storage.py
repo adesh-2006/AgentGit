@@ -15,15 +15,14 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from agentgit.snapshot import (
     BehavioralSnapshot,
-    load_snapshot,
     list_snapshots,
+    load_snapshot,
     save_snapshot,
 )
-
 
 _AGENTGIT_DIR = ".agentgit"
 _CONFIG_FILE = "config.json"

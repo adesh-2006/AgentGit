@@ -14,17 +14,18 @@ Commands::
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 import click
-from rich.console import Console
 
 from agentgit import __version__
-from agentgit.ci import ci_check as _ci_check, parse_rules
+from agentgit.ci import ci_check as _ci_check
+from agentgit.ci import parse_rules
 from agentgit.diff import create_diff
 from agentgit.report import (
     console,
+    diff_to_html,
+    diff_to_markdown,
     print_ci_report,
     print_diff_report,
     print_snapshot_list,
@@ -91,7 +92,7 @@ def snapshot(ctx: click.Context, version: str, tasks: str | None) -> None:
         task_data = []
 
     # Build a minimal snapshot from task data when running CLI standalone
-    from agentgit.snapshot import BehavioralSnapshot, BehavioralMetrics
+    from agentgit.snapshot import BehavioralSnapshot
     snap = BehavioralSnapshot(
         version=version,
         agent_name=store.get_config().get("agent_name", "agent"),
@@ -109,9 +110,10 @@ def snapshot(ctx: click.Context, version: str, tasks: str | None) -> None:
 @cli.command("diff")
 @click.argument("version_a")
 @click.argument("version_b", required=False)
-@click.option("--format", "fmt", type=click.Choice(["table", "json"]), default="table")
+@click.option("--format", "fmt", type=click.Choice(["table", "json", "markdown", "html"]), default="table", help="Output format.")
+@click.option("--output", "-o", type=click.Path(writable=True), default=None, help="Save diff output to file.")
 @click.pass_context
-def diff_cmd(ctx: click.Context, version_a: str, version_b: str | None, fmt: str) -> None:
+def diff_cmd(ctx: click.Context, version_a: str, version_b: str | None, fmt: str, output: str | None) -> None:
     """Show behavioral diff between two snapshots."""
     store = _store(ctx)
     if not store.is_initialised:
@@ -135,7 +137,20 @@ def diff_cmd(ctx: click.Context, version_a: str, version_b: str | None, fmt: str
     result = create_diff(snap_a, snap_b)
 
     if fmt == "json":
-        click.echo(result.model_dump_json(indent=2))
+        rendered = result.model_dump_json(indent=2)
+    elif fmt == "markdown":
+        rendered = diff_to_markdown(result)
+    elif fmt == "html":
+        rendered = diff_to_html(result)
+    else:
+        rendered = None
+
+    if output:
+        out_path = Path(output)
+        out_path.write_text(rendered if rendered is not None else diff_to_markdown(result), encoding="utf-8")
+        console.print(f"[bold green]✅ Diff exported to {out_path}[/bold green]")
+    elif rendered is not None:
+        click.echo(rendered)
     else:
         print_diff_report(result)
 
