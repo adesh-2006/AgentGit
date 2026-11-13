@@ -15,7 +15,7 @@ Usage::
 from __future__ import annotations
 
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -52,6 +52,18 @@ class ToolChange(BaseModel):
     delta_pct: float = 0.0
 
 
+class TaskRegression(BaseModel):
+    """Details of a single task that regressed between snapshots."""
+
+    task_index: int
+    task_input: str
+    previous_status: str = "success"
+    current_status: str = "failed"
+    error: Optional[str] = None
+    latency_delta_ms: float = 0.0
+    suggested_fix: str = ""
+
+
 class BehavioralDiff(BaseModel):
     """Complete behavioral diff between two snapshots."""
 
@@ -59,6 +71,7 @@ class BehavioralDiff(BaseModel):
     to_version: str
     changes: List[Change] = Field(default_factory=list)
     tool_changes: List[ToolChange] = Field(default_factory=list)
+    regressed_tasks: List[TaskRegression] = Field(default_factory=list)
     improvements: int = 0
     regressions: int = 0
     neutral: int = 0
@@ -159,6 +172,42 @@ def create_diff(
             delta_pct=round(d_pct, 2),
         ))
 
+    # Regressed tasks breakdown (individual task-level regressions & root causes)
+    regressed_tasks: List[TaskRegression] = []
+    if snapshot_a.task_results and snapshot_b.task_results:
+        min_len = min(len(snapshot_a.task_results), len(snapshot_b.task_results))
+        for idx in range(min_len):
+            ra = snapshot_a.task_results[idx]
+            rb = snapshot_b.task_results[idx]
+            lat_delta = round(rb.latency_ms - ra.latency_ms, 2)
+            if (ra.success and not rb.success) or (not ra.error and rb.error):
+                err = rb.error or "Task failed without explicit exception"
+                fix = suggest_remediation(err, lat_delta)
+                regressed_tasks.append(
+                    TaskRegression(
+                        task_index=idx,
+                        task_input=str(rb.task_input),
+                        previous_status="success",
+                        current_status="failed",
+                        error=err,
+                        latency_delta_ms=lat_delta,
+                        suggested_fix=fix,
+                    )
+                )
+            elif ra.latency_ms > 0 and lat_delta > 1000 and (rb.latency_ms / max(ra.latency_ms, 1)) > 2.0:
+                fix = suggest_remediation(None, lat_delta)
+                regressed_tasks.append(
+                    TaskRegression(
+                        task_index=idx,
+                        task_input=str(rb.task_input),
+                        previous_status=f"{ra.latency_ms:.0f}ms",
+                        current_status=f"{rb.latency_ms:.0f}ms",
+                        error=None,
+                        latency_delta_ms=lat_delta,
+                        suggested_fix=fix,
+                    )
+                )
+
     improvements = sum(1 for c in changes if c.status == ChangeStatus.IMPROVED)
     regressions = sum(1 for c in changes if c.status == ChangeStatus.REGRESSED)
     neutral = sum(1 for c in changes if c.status == ChangeStatus.NEUTRAL)
@@ -169,11 +218,35 @@ def create_diff(
         to_version=snapshot_b.version,
         changes=changes,
         tool_changes=tool_changes,
+        regressed_tasks=regressed_tasks,
         improvements=improvements,
         regressions=regressions,
         neutral=neutral,
         verdict=verdict,
     )
+
+
+def suggest_remediation(error_str: Optional[str], latency_delta_ms: float = 0.0) -> str:
+    """Provide an actionable remediation recommendation for an observed failure or regression."""
+    if not error_str:
+        if latency_delta_ms > 500:
+            return "Optimize prompt length, reduce unnecessary tool roundtrips, or switch to a faster model tier."
+        return "Review system prompt edge-case instructions or provide few-shot examples."
+
+    e = error_str.lower()
+    if any(k in e for k in ("timeout", "deadline", "timed out", "gateway")):
+        return "Add retry mechanism with exponential backoff or increase external API timeout limits."
+    if any(k in e for k in ("json", "parse", "format", "schema", "validation")):
+        return "Enforce structured outputs via Pydantic schema or JSON schema mode in model parameters."
+    if any(k in e for k in ("rate limit", "429", "quota", "too many requests")):
+        return "Implement client-side rate limiting, request throttling, or automatic fallback model routing."
+    if any(k in e for k in ("auth", "key", "token", "unauthorized", "401", "403", "permission")):
+        return "Verify environment API keys, service credentials, and security scopes for tools."
+    if any(k in e for k in ("null", "none", "keyerror", "attributeerror")):
+        return "Add defensive input/output validation checks before accessing model tool arguments."
+    if any(k in e for k in ("recursion", "max depth", "loop", "infinite")):
+        return "Add maximum iteration limits and cycle detection in agent thought loop."
+    return "Inspect traceback and add defensive error handling or guardrails."
 
 
 def _determine_status(metric: str, delta: float) -> ChangeStatus:

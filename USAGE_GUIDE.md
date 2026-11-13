@@ -77,26 +77,29 @@ agentgit snapshot v2.0 --tasks agentgit/benchmarks/tool_calling.json
 # 4. View the terminal diff:
 agentgit diff v1.0 v2.0
 
-# 5. Export as PR comment markdown:
+# 5. Diagnose regression errors & get remediation advice:
+agentgit diagnose v2.0 v1.0
+
+# 6. Export as PR comment markdown:
 agentgit diff v1.0 v2.0 --format markdown
 
-# 6. Export as a standalone dark-mode HTML dashboard:
+# 7. Export as a standalone dark-mode HTML dashboard:
 agentgit diff v1.0 v2.0 --format html -o diff_report.html
 
-# 7. Pinpoint which version introduced a regression:
+# 8. Pinpoint which version introduced a regression:
 agentgit bisect v1.0 v2.0 --metric error_rate
 
-# 8. Attribution history for any metric or tool:
+# 9. Attribution history for any metric or tool:
 agentgit blame error_rate
 agentgit blame tool:web_search
 
-# 9. Step-by-step playback of any task execution:
+# 10. Step-by-step playback of any task execution:
 agentgit replay v2.0 1
 
-# 10. Forecast your monthly API bill at scale:
+# 11. Forecast your monthly API bill at scale:
 agentgit cost-predict v1.0 --dau 5000 --requests 4
 
-# 11. Launch the interactive browser dashboard:
+# 12. Launch the interactive browser dashboard:
 agentgit ui --port 8585
 ```
 

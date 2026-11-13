@@ -148,6 +148,29 @@ def print_diff_report(d: BehavioralDiff) -> None:
     )
     console.print()
 
+    # Regressed tasks & root cause diagnosis
+    if d.regressed_tasks:
+        fail_table = Table(
+            show_header=True,
+            header_style="bold red",
+            border_style="red",
+            title="🔍 Root-Cause Diagnosis: Regressed Tasks & Remediation",
+            title_style="bold red",
+        )
+        fail_table.add_column("#", justify="right", width=4)
+        fail_table.add_column("Task Input", style="white", min_width=25)
+        fail_table.add_column("Regression", style="bold red", min_width=15)
+        fail_table.add_column("Error & Suggested Fix", style="yellow", min_width=35)
+
+        for rt in d.regressed_tasks:
+            reg_desc = f"{rt.previous_status} → [bold red]{rt.current_status}[/bold red]"
+            err_line = f"[red]{rt.error}[/red]\n" if rt.error else ""
+            fix_desc = f"{err_line}[bold green]💡 Fix:[/bold green] {rt.suggested_fix}"
+            fail_table.add_row(str(rt.task_index + 1), str(rt.task_input), reg_desc, fix_desc)
+
+        console.print(fail_table)
+        console.print()
+
 
 # ---------------------------------------------------------------------------
 # Markdown Diff (GitHub PR comments)
@@ -193,6 +216,20 @@ def diff_to_markdown(d: BehavioralDiff) -> str:
             arrow = "↑" if tc.delta > 0 else "↓" if tc.delta < 0 else "—"
             delta_s = f"{arrow} {abs(tc.delta_pct):.0f}%" if tc.delta else "—"
             lines.append(f"| `{tc.tool}` | {tc.old_count} | {tc.new_count} | {delta_s} |")
+
+    if d.regressed_tasks:
+        lines.extend([
+            "",
+            "#### 🔍 Root-Cause Diagnosis: Regressed Tasks & Remediation",
+            "",
+            "| # | Task Input | Regression | Error / Root Cause | 💡 Suggested Fix |",
+            "| :-: | :--- | :---: | :--- | :--- |",
+        ])
+        for rt in d.regressed_tasks:
+            err_txt = f"`{rt.error}`" if rt.error else "*(High Latency)*"
+            lines.append(
+                f"| {rt.task_index + 1} | `{rt.task_input}` | `{rt.previous_status}` → **`{rt.current_status}`** | {err_txt} | {rt.suggested_fix} |"
+            )
 
     lines.extend([
         "",
@@ -267,6 +304,37 @@ def diff_to_html(d: BehavioralDiff) -> str:
             </thead>
             <tbody>
               {"".join(tool_rows)}
+            </tbody>
+          </table>
+        </div>"""
+
+    regressed_rows = []
+    for rt in d.regressed_tasks:
+        err_badge = f"<code style='color: var(--red);'>{rt.error}</code>" if rt.error else "<span style='color: var(--yellow);'>High Latency</span>"
+        regressed_rows.append(f"""
+        <tr>
+          <td><strong>#{rt.task_index + 1}</strong></td>
+          <td><code>{rt.task_input}</code></td>
+          <td><span class="badge-regressed">{rt.previous_status} &rarr; {rt.current_status}</span></td>
+          <td>{err_badge}<br><strong style='color: var(--green);'>💡 Fix:</strong> {rt.suggested_fix}</td>
+        </tr>""")
+
+    regressed_section = ""
+    if regressed_rows:
+        regressed_section = f"""
+        <div class="card" style="margin-top: 24px; border: 1px solid var(--red);">
+          <h3 style="color: var(--red); margin-top: 0;">🔍 Root-Cause Diagnosis: Regressed Tasks & Remediation</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Task Input</th>
+                <th>Regression</th>
+                <th>Error & Suggested Fix</th>
+              </tr>
+            </thead>
+            <tbody>
+              {"".join(regressed_rows)}
             </tbody>
           </table>
         </div>"""
@@ -444,6 +512,8 @@ def diff_to_html(d: BehavioralDiff) -> str:
     </div>
 
     {tool_section}
+
+    {regressed_section}
 
     <div class="verdict-box">
       <strong>Verdict:</strong> {d.verdict}

@@ -235,6 +235,13 @@ agentgit bisect v1.0 v3.0 --metric error_rate
 # 🎯 Regression in 'error_rate' first introduced in version 'v2.0' (jumped from 0.0000 to 0.4000).
 ```
 
+### 🩺 `agentgit diagnose` — Root-Cause Regression & Failure Remediation
+Pinpoint exactly which tasks regressed, the error reason, and automated recommendations:
+```bash
+agentgit diagnose v2.0 v1.0
+```
+Outputs an instant diagnostic table with the exact failure, exception stack trace, latency impact, and a recommended fix (e.g. adding exponential backoff retry, structured output enforcement, or rate limiting).
+
 ### 🌿 `agentgit matrix` — Model & Prompt A/B Testing
 Compare multiple models or prompts on identical benchmark suites side-by-side:
 ```bash
