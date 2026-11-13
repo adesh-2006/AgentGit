@@ -58,7 +58,13 @@ print_diff_report(diff_result)
 AgentGit includes a full suite of Git-style terminal commands:
 
 ```bash
-# 1. Initialize inside any project folder:
+# 0. Instant zero-config demo (try AgentGit in 5 seconds without writing code):
+agentgit demo
+
+# 1. Generate a starter evaluation script in your current directory:
+agentgit quickstart --framework openai  # or anthropic, langchain, crewai, python
+
+# 2. Initialize inside any project folder:
 agentgit init --name my-agent
 
 # 2. Check if a prompt has contradictions or injection risks:

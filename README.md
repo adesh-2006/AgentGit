@@ -31,11 +31,54 @@
 
 ---
 
-## ⚡ Quickstart
+## 📦 10-Second Installation
+
+Choose the fastest way to get started:
+
+### Option A: One-Line Installer (Zero Setup)
+
+**Linux & macOS (curl):**
+```bash
+curl -sSL https://raw.githubusercontent.com/adesh-2006/AgentGit/main/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/adesh-2006/AgentGit/main/install.ps1 | iex
+```
+
+### Option B: pip
+```bash
+pip install "git+https://github.com/adesh-2006/AgentGit.git"
+```
+
+### Option C: Docker (No Python Needed)
+```bash
+docker build -t agentgit .
+docker run -p 8585:8585 agentgit
+```
+
+---
+
+## ⚡ 5-Second Instant Demo (Zero Code)
+
+Test AgentGit directly in your terminal right now:
 
 ```bash
-pip install agentgit
+agentgit demo
 ```
+*Simulates prompt iteration across customer support tasks, computes live behavioral diffs, and detects regressions automatically.*
+
+Need starter evaluation code for your project?
+```bash
+# Generate a ready-to-run evaluation script:
+agentgit quickstart --framework openai     # or anthropic, langchain, crewai, python
+python agent_eval.py
+```
+
+---
+
+## 🚀 30-Second Python Quickstart
 
 ```python
 from agentgit import track

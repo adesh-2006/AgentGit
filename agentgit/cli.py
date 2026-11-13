@@ -526,6 +526,212 @@ def pull_cmd(ctx: click.Context, remote: str, version: str) -> None:
 
 
 # ------------------------------------------------------------------
+# demo (zero-config instant interactive showcase)
+# ------------------------------------------------------------------
+
+@cli.command("demo")
+@click.pass_context
+def demo_cmd(ctx: click.Context) -> None:
+    """Run an instant zero-config demonstration showing AgentGit in action."""
+    import time
+
+    from agentgit.diff import create_diff
+    from agentgit.snapshot import create_snapshot
+    from agentgit.tracker import track
+
+    console.print("\n[bold cyan]🧬 Welcome to AgentGit Demo![/bold cyan]")
+    console.print("[dim]Simulating prompt & model iteration across 5 customer support tasks...[/dim]\n")
+
+    # Agent V1 (Direct, concise)
+    def support_agent_v1(task: str) -> str:
+        if "refund" in task.lower():
+            return "Refund of order #1234 processed."
+        elif "cancel" in task.lower():
+            return "Subscription cancelled."
+        return f"Assisting with: {task}"
+
+    # Agent V2 (More polite, but introduced a latency spike and an edge-case bug)
+    def support_agent_v2(task: str) -> str:
+        time.sleep(0.015)  # Simulating slower reasoning
+        if "refund" in task.lower():
+            return "Hello! I have thoroughly reviewed your account and processed your refund for order #1234."
+        elif "cancel" in task.lower():
+            raise RuntimeError("Payment gateway timeout during cancellation")
+        return f"Greetings! We are delighted to assist with: {task}"
+
+    demo_tasks = [
+        "What is your return policy?",
+        "I want a refund for my recent purchase",
+        "Please cancel my monthly subscription",
+        "How do I update my billing address?",
+        "Do you ship internationally?",
+    ]
+
+    console.print("1️⃣ [bold white]Taking snapshot of Agent v1.0 (baseline)...[/bold white]")
+    v1_agent = track(support_agent_v1, name="support-agent")
+    snap1 = create_snapshot(v1_agent, "v1.0", demo_tasks)
+    console.print("[green]   ✓ v1.0 snapshot complete (100% completion, 0 errors)[/green]\n")
+
+    console.print("2️⃣ [bold white]Taking snapshot of Agent v2.0 (after prompt update)...[/bold white]")
+    v2_agent = track(support_agent_v2, name="support-agent")
+    snap2 = create_snapshot(v2_agent, "v2.0", demo_tasks)
+    console.print("[green]   ✓ v2.0 snapshot complete[/green]\n")
+
+    console.print("3️⃣ [bold white]Calculating Behavioral Diff (v1.0 → v2.0):[/bold white]")
+    diff_res = create_diff(snap1, snap2)
+    print_diff_report(diff_res)
+
+    console.print("[bold green]✅ Demo finished![/bold green]")
+    console.print("   • Start your own project: [cyan]agentgit init[/cyan]")
+    console.print("   • Generate starter code:  [cyan]agentgit quickstart[/cyan]")
+    console.print("   • Launch web dashboard:   [cyan]agentgit ui[/cyan]\n")
+
+
+# ------------------------------------------------------------------
+# quickstart wizard
+# ------------------------------------------------------------------
+
+_TEMPLATES = {
+    "openai": '''"""AgentGit evaluation starter for OpenAI."""
+from agentgit import track, snapshot, diff
+from agentgit.report import print_diff_report
+from openai import OpenAI
+
+client = OpenAI()
+
+# 1. Wrap your agent function
+@track(name="openai-agent")
+def my_agent(user_query: str):
+    return client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": user_query}],
+    )
+
+# 2. Define benchmark queries
+tasks = [
+    "Summarize our terms of service in 3 bullet points.",
+    "Draft a professional refund confirmation email.",
+    "Explain our technical pricing tiers to an enterprise buyer.",
+]
+
+if __name__ == "__main__":
+    print("Running AgentGit evaluation...")
+    snap = snapshot(my_agent, version="v1.0", tasks=tasks)
+    print(f"Snapshot v1.0 complete! Completion: {snap.metrics.task_completion_rate:.0%}")
+''',
+    "anthropic": '''"""AgentGit evaluation starter for Anthropic Claude."""
+from agentgit import track, snapshot, diff
+from agentgit.report import print_diff_report
+import anthropic
+
+client = anthropic.Anthropic()
+
+@track(name="claude-agent")
+def my_agent(user_query: str):
+    return client.messages.create(
+        model="claude-3-5-sonnet-20241022",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": user_query}],
+    )
+
+tasks = [
+    "Analyze the architectural trade-offs of microservices vs monoliths.",
+    "Draft an incident postmortem for a 15-minute database outage.",
+]
+
+if __name__ == "__main__":
+    print("Running AgentGit evaluation on Claude...")
+    snap = snapshot(my_agent, version="v1.0", tasks=tasks)
+    print(f"Snapshot v1.0 complete! Completion: {snap.metrics.task_completion_rate:.0%}")
+''',
+    "langchain": '''"""AgentGit evaluation starter for LangChain / LangGraph."""
+from agentgit import track, snapshot, diff
+from agentgit.report import print_diff_report
+
+# Example mock agent or wrap your actual LangChain agent
+def my_langchain_agent(task: str):
+    # return your_chain.invoke({"input": task})
+    return f"LangChain processed: {task}"
+
+tracked_agent = track(my_langchain_agent, name="langchain-agent")
+
+tasks = [
+    "Query the database for active subscribers.",
+    "Send notification email to user #402.",
+]
+
+if __name__ == "__main__":
+    snap = snapshot(tracked_agent, version="v1.0", tasks=tasks)
+    print(f"LangChain snapshot v1.0 complete! Completion: {snap.metrics.task_completion_rate:.0%}")
+''',
+    "crewai": '''"""AgentGit evaluation starter for CrewAI."""
+from agentgit import track, snapshot, diff
+from agentgit.report import print_diff_report
+
+def my_crew_agent(task: str):
+    # return my_crew.kickoff(inputs={"topic": task})
+    return f"Crew executed: {task}"
+
+tracked_crew = track(my_crew_agent, name="research-crew")
+
+tasks = [
+    "Research recent breakthroughs in solid-state batteries.",
+    "Write an executive summary on AI safety standards in 2026.",
+]
+
+if __name__ == "__main__":
+    snap = snapshot(tracked_crew, version="v1.0", tasks=tasks)
+    print(f"CrewAI snapshot v1.0 complete! Completion: {snap.metrics.task_completion_rate:.0%}")
+''',
+    "python": '''"""AgentGit starter for custom Python agents."""
+from agentgit import track, snapshot, diff
+from agentgit.report import print_diff_report
+
+@track(name="my-custom-agent")
+def my_agent(task: str) -> str:
+    # Your agent code here
+    return f"Handled task: {task}"
+
+tasks = [
+    "Task 1: Process user account update",
+    "Task 2: Validate shipping address",
+    "Task 3: Calculate order discount",
+]
+
+if __name__ == "__main__":
+    print("Taking baseline snapshot v1.0...")
+    snap = snapshot(my_agent, version="v1.0", tasks=tasks)
+    print(f"Snapshot v1.0 saved! Completion: {snap.metrics.task_completion_rate:.0%}")
+'''
+}
+
+
+@cli.command("quickstart")
+@click.option("--framework", "-f", type=click.Choice(["openai", "anthropic", "langchain", "crewai", "python"]), default=None, help="Target AI framework.")
+@click.pass_context
+def quickstart_cmd(ctx: click.Context, framework: str | None) -> None:
+    """Generate a starter agent evaluation script in the current directory."""
+    if not framework:
+        console.print("[bold cyan]Select your AI framework:[/bold cyan]")
+        console.print("  [1] OpenAI (GPT-4o / GPT-4o-mini)")
+        console.print("  [2] Anthropic (Claude 3.5 Sonnet / Haiku)")
+        console.print("  [3] LangChain / LangGraph")
+        console.print("  [4] CrewAI")
+        console.print("  [5] Custom Python Function")
+        choice = click.prompt("Enter choice (1-5)", default="1")
+        mapping = {"1": "openai", "2": "anthropic", "3": "langchain", "4": "crewai", "5": "python"}
+        framework = mapping.get(choice, "openai")
+
+    template = _TEMPLATES.get(framework, _TEMPLATES["python"])
+    out_file = Path("agent_eval.py")
+    out_file.write_text(template, encoding="utf-8")
+
+    console.print(f"\n[bold green]✅ Generated {out_file}[/bold green] for [cyan]{framework}[/cyan]!")
+    console.print("   Run it right now with:")
+    console.print(f"   [bold white]python {out_file}[/bold white]\n")
+
+
+# ------------------------------------------------------------------
 # Entry point
 # ------------------------------------------------------------------
 
