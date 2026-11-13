@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-import json
 import tempfile
-from pathlib import Path
 
-from agentgit.tracker import track, TrackedAgent, InvocationRecord
-from agentgit.snapshot import create_snapshot, BehavioralSnapshot, save_snapshot, load_snapshot
-from agentgit.diff import create_diff, ChangeStatus
-from agentgit.report import diff_to_markdown, diff_to_html
-from agentgit.ci import parse_rules, ci_check
+from agentgit.ci import ci_check, parse_rules
+from agentgit.diff import ChangeStatus, create_diff
+from agentgit.report import diff_to_html, diff_to_markdown
+from agentgit.snapshot import create_snapshot, load_snapshot, save_snapshot
 from agentgit.storage import AgentGitStore
-
+from agentgit.tracker import TrackedAgent, track
 
 # ---------------------------------------------------------------------------
 # Helpers

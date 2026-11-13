@@ -26,8 +26,12 @@ from agentgit.report import (
     console,
     diff_to_html,
     diff_to_markdown,
+    print_bisect_report,
+    print_blame_report,
     print_ci_report,
     print_diff_report,
+    print_matrix_report,
+    print_replay_report,
     print_snapshot_list,
     print_snapshot_report,
 )
@@ -241,6 +245,116 @@ def ci_check_cmd(ctx: click.Context, version: str, rules: str) -> None:
 
     if not passed:
         raise SystemExit(1)
+
+
+# ------------------------------------------------------------------
+# blame
+# ------------------------------------------------------------------
+
+@cli.command("blame")
+@click.argument("metric")
+@click.pass_context
+def blame_cmd(ctx: click.Context, metric: str) -> None:
+    """Identify which version introduced a regression in METRIC."""
+    from agentgit.blame import blame_metric
+    store = _store(ctx)
+    if not store.is_initialised:
+        console.print("[red]Error:[/red] Not an AgentGit project. Run `agentgit init` first.")
+        raise SystemExit(1)
+
+    report = blame_metric(store, metric)
+    print_blame_report(report)
+
+
+# ------------------------------------------------------------------
+# replay
+# ------------------------------------------------------------------
+
+@cli.command("replay")
+@click.argument("version")
+@click.argument("task_index", type=int)
+@click.pass_context
+def replay_cmd(ctx: click.Context, version: str, task_index: int) -> None:
+    """Inspect and replay the exact trajectory of task TASK_INDEX in VERSION."""
+    from agentgit.replay import get_task_trace
+    store = _store(ctx)
+    if not store.is_initialised:
+        console.print("[red]Error:[/red] Not an AgentGit project. Run `agentgit init` first.")
+        raise SystemExit(1)
+
+    try:
+        # User provides 1-based index (e.g. 1 for first task)
+        trace = get_task_trace(store, version, task_index - 1)
+    except (FileNotFoundError, IndexError) as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
+
+    print_replay_report(trace)
+
+
+# ------------------------------------------------------------------
+# matrix
+# ------------------------------------------------------------------
+
+@cli.command("matrix")
+@click.argument("versions", nargs=-1, required=True)
+@click.pass_context
+def matrix_cmd(ctx: click.Context, versions: tuple[str, ...]) -> None:
+    """Compare 2 or more snapshots in a side-by-side benchmark matrix."""
+    from agentgit.matrix import build_comparison_matrix
+    store = _store(ctx)
+    if not store.is_initialised:
+        console.print("[red]Error:[/red] Not an AgentGit project. Run `agentgit init` first.")
+        raise SystemExit(1)
+
+    try:
+        matrix = build_comparison_matrix(store, list(versions))
+    except (ValueError, FileNotFoundError) as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
+
+    print_matrix_report(matrix)
+
+
+# ------------------------------------------------------------------
+# bisect
+# ------------------------------------------------------------------
+
+@cli.command("bisect")
+@click.argument("good_version")
+@click.argument("bad_version")
+@click.option("--metric", "-m", default="error_rate", help="Metric to bisect (default: error_rate).")
+@click.pass_context
+def bisect_cmd(ctx: click.Context, good_version: str, bad_version: str, metric: str) -> None:
+    """Pinpoint the exact snapshot where METRIC regressed between versions."""
+    from agentgit.bisect import bisect_metric
+    store = _store(ctx)
+    if not store.is_initialised:
+        console.print("[red]Error:[/red] Not an AgentGit project. Run `agentgit init` first.")
+        raise SystemExit(1)
+
+    try:
+        res = bisect_metric(store, good_version, bad_version, metric)
+    except (ValueError, FileNotFoundError) as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
+
+    print_bisect_report(res)
+
+
+# ------------------------------------------------------------------
+# ui
+# ------------------------------------------------------------------
+
+@cli.command("ui")
+@click.option("--port", "-p", default=8585, help="Port to run the dashboard on (default: 8585).")
+@click.option("--no-browser", is_flag=True, default=False, help="Do not open the browser automatically.")
+@click.pass_context
+def ui_cmd(ctx: click.Context, port: int, no_browser: bool) -> None:
+    """Launch the local zero-dependency AgentGit web dashboard."""
+    from agentgit.ui import start_ui
+    project = ctx.obj.get("project", ".")
+    start_ui(project_path=project, port=port, open_browser=not no_browser)
 
 
 # ------------------------------------------------------------------

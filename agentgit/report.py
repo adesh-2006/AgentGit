@@ -530,3 +530,131 @@ def print_ci_report(
     console.print(Panel(table, title=header, border_style="blue", padding=(1, 2)))
     console.print(Panel(status, border_style="green" if passed else "red", padding=(0, 2)))
     console.print()
+
+
+# ---------------------------------------------------------------------------
+# Blame report
+# ---------------------------------------------------------------------------
+
+def print_blame_report(b: Any) -> None:
+    """Print behavioral attribution report."""
+    table = Table(
+        title=f"Behavioral Blame: {b.metric}",
+        show_header=True,
+        header_style="bold cyan",
+        border_style="blue",
+    )
+    table.add_column("Version", style="bold")
+    table.add_column("Timestamp", style="dim")
+    table.add_column("Value", justify="right")
+    table.add_column("Delta", justify="right")
+    table.add_column("Status", justify="center")
+
+    for e in b.entries:
+        status_s = "⚠️ Shift Point" if e.is_shift_point else ("✅ Improved" if e.status == ChangeStatus.IMPROVED else "—")
+        row_style = "bold red" if e.is_shift_point else "white"
+        table.add_row(
+            f"[{row_style}]{e.version}[/{row_style}]",
+            e.timestamp,
+            str(e.value),
+            f"{e.delta:+.4f}" if e.delta != 0 else "—",
+            status_s,
+        )
+
+    console.print()
+    console.print(table)
+    console.print(Panel(f"[bold]{b.summary}[/bold]", border_style="yellow", padding=(0, 2)))
+    console.print()
+
+
+# ---------------------------------------------------------------------------
+# Replay report
+# ---------------------------------------------------------------------------
+
+def print_replay_report(t: Any) -> None:
+    """Print trajectory execution playback."""
+    header = Text.assemble(
+        ("AgentGit Task Replay: #", "bold white"),
+        (str(t.task_index + 1), "bold yellow"),
+        (" (", "dim"),
+        (t.version, "bold green"),
+        (")", "dim"),
+    )
+
+    table = Table(show_header=False, border_style="blue")
+    table.add_column("Property", style="bold cyan", width=18)
+    table.add_column("Value", style="white")
+
+    table.add_row("Status", "[bold green]PASSED ✅[/bold green]" if t.success else "[bold red]FAILED ❌[/bold red]")
+    table.add_row("Input", str(t.task_input))
+    table.add_row("Output", str(t.output))
+    table.add_row("Steps / Tools", f"{t.steps} steps — Tools: {', '.join(t.tools_called) if t.tools_called else 'None'}")
+    table.add_row("Latency", f"{t.latency_ms:.0f} ms")
+    table.add_row("Tokens", f"{t.tokens}")
+    table.add_row("Cost", f"${t.cost_usd:.4f}")
+    if t.error:
+        table.add_row("Error", f"[bold red]{t.error}[/bold red]")
+
+    console.print()
+    console.print(Panel(table, title=header, border_style="blue", padding=(1, 2)))
+    console.print()
+
+
+# ---------------------------------------------------------------------------
+# Matrix report
+# ---------------------------------------------------------------------------
+
+def print_matrix_report(m: Any) -> None:
+    """Print multi-variant comparison matrix."""
+    table = Table(
+        title="Multi-Variant Benchmark Matrix",
+        show_header=True,
+        header_style="bold cyan",
+        border_style="blue",
+    )
+    table.add_column("Metric", style="white", min_width=22)
+    for v in m.versions:
+        table.add_column(v, justify="right", min_width=12)
+    table.add_column("Winner", justify="center", style="bold green", min_width=12)
+
+    for row in m.rows:
+        row_vals = [str(row.values.get(v, "—")) for v in m.versions]
+        table.add_row(row.display_name, *row_vals, row.best_version)
+
+    summary_text = (
+        f"[bold]Category Winners:[/bold]\n"
+        f"  • Highest Completion: [bold green]{m.winner_completion}[/bold green]\n"
+        f"  • Lowest Cost:       [bold green]{m.winner_cost}[/bold green]\n"
+        f"  • Fastest Latency:   [bold green]{m.winner_speed}[/bold green]"
+    )
+
+    console.print()
+    console.print(table)
+    console.print(Panel(summary_text, border_style="green", padding=(0, 2)))
+    console.print()
+
+
+# ---------------------------------------------------------------------------
+# Bisect report
+# ---------------------------------------------------------------------------
+
+def print_bisect_report(b: Any) -> None:
+    """Print regression bisect results."""
+    table = Table(
+        title=f"Regression Bisect: {b.metric}",
+        show_header=True,
+        header_style="bold cyan",
+        border_style="blue",
+    )
+    table.add_column("Snapshot", style="bold")
+    table.add_column("Value", justify="right")
+    table.add_column("Status", justify="center")
+
+    for s in b.steps:
+        marker = "[bold red]🎯 First Regression[/bold red]" if s.is_regression_boundary else "—"
+        table.add_row(s.version, str(s.value), marker)
+
+    console.print()
+    console.print(table)
+    console.print(Panel(f"[bold]{b.explanation}[/bold]", border_style="red" if b.culprit_version else "green", padding=(0, 2)))
+    console.print()

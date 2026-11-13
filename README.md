@@ -146,6 +146,22 @@ agentgit diff v1.0 v2.0 --format markdown
 # Export as a standalone dark-mode HTML dashboard
 agentgit diff v1.0 v2.0 --format html -o diff_report.html
 
+# Multi-variant benchmark matrix (compare GPT-4o vs Claude vs Llama)
+agentgit matrix v-gpt4o v-claude v-llama
+
+# Automated regression hunting (find the snapshot that broke behavior)
+agentgit bisect v1.0 v3.0 --metric error_rate
+
+# Behavioral blame (attribution history for any metric or tool)
+agentgit blame error_rate
+agentgit blame tool:web_search
+
+# Time-travel trajectory debugger (replay step-by-step thinking for task #1)
+agentgit replay v2.0 1
+
+# Launch local zero-dependency interactive dashboard
+agentgit ui --port 8585
+
 # List all snapshots  
 agentgit list
 
@@ -157,6 +173,51 @@ agentgit rollback v1.0
 
 # CI/CD gate — fail the build if behavior regresses
 agentgit ci-check v2.0 --rules "task_completion >= 0.85 AND error_rate < 0.10"
+```
+
+---
+
+## 🎯 Flagship Features
+
+### 🔍 `agentgit bisect` — Automated Regression Hunting
+Did your agent start failing tasks between `v1.0` and `v3.0`? Don't spend hours guessing:
+```bash
+agentgit bisect v1.0 v3.0 --metric error_rate
+# 🎯 Regression in 'error_rate' first introduced in version 'v2.0' (jumped from 0.0000 to 0.4000).
+```
+
+### 🌿 `agentgit matrix` — Model & Prompt A/B Testing
+Compare multiple models or prompts on identical benchmark suites side-by-side:
+```bash
+agentgit matrix v-gpt4o v-claude v-llama
+# Multi-Variant Benchmark Matrix:
+# Metric                     v-gpt4o       v-claude        v-llama       Winner
+# Task Completion Rate       92%           95%             88%           v-claude
+# Avg Latency (ms)           420 ms        380 ms          210 ms        v-llama
+# Avg Cost / Task ($)        $0.0120       $0.0090         $0.0000       v-llama
+```
+
+### ⏪ `agentgit replay` — Time-Travel Trajectory Debugger
+Inspect the exact thought process, tool invocations, and raw outputs of any historical run:
+```bash
+agentgit replay v2.0 1
+```
+
+### 🖥️ `agentgit ui` — Zero-Dependency Local Web Dashboard
+Run `agentgit ui` to launch a local dashboard to visually explore trends, compare snapshots, and inspect task failures. No external node/npm dependencies needed.
+
+---
+
+## 🤖 Official GitHub Action
+
+You can add AgentGit directly to any repository using the official composite action:
+
+```yaml
+- uses: adesh-2006/AgentGit@main
+  with:
+    version: v2.0
+    rules: "task_completion >= 0.85 AND error_rate < 0.10"
+    diff-base: v1.0
 ```
 
 ---

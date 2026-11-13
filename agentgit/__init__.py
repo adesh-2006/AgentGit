@@ -22,12 +22,17 @@ Usage::
 
 __version__ = "0.1.0"
 
+from agentgit.bisect import bisect_metric
+from agentgit.blame import blame_metric
 from agentgit.ci import ci_check
 from agentgit.diff import create_diff as diff
+from agentgit.matrix import build_comparison_matrix
+from agentgit.replay import get_task_trace
 from agentgit.report import diff_to_html, diff_to_markdown
 from agentgit.snapshot import create_snapshot as snapshot
 from agentgit.storage import AgentGitStore
 from agentgit.tracker import track
+from agentgit.ui import start_ui
 
 __all__ = [
     "__version__",
@@ -37,5 +42,10 @@ __all__ = [
     "ci_check",
     "diff_to_markdown",
     "diff_to_html",
+    "blame_metric",
+    "bisect_metric",
+    "build_comparison_matrix",
+    "get_task_trace",
+    "start_ui",
     "AgentGitStore",
 ]

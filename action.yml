@@ -1,0 +1,47 @@
+name: 'AgentGit Behavioral CI Gate'
+description: 'Version, diff, and block behavioral regressions in AI agents'
+author: 'adesh-2006'
+branding:
+  icon: 'git-pull-request'
+  color: 'purple'
+
+inputs:
+  version:
+    description: 'Snapshot version to check against rules (e.g. v2.0)'
+    required: true
+  rules:
+    description: 'CI check rules (e.g. "task_completion >= 0.85 AND error_rate < 0.10")'
+    required: false
+    default: 'task_completion >= 0.80'
+  diff-base:
+    description: 'Baseline version to generate PR diff from (e.g. v1.0)'
+    required: false
+  comment-pr:
+    description: 'Whether to post the behavioral diff as a comment on the Pull Request'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install AgentGit
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install agentgit
+
+    - name: Run Behavioral CI Check
+      shell: bash
+      run: |
+        agentgit ci-check ${{ inputs.version }} --rules "${{ inputs.rules }}"
+
+    - name: Generate PR Markdown Diff
+      if: ${{ inputs.diff-base != '' }}
+      shell: bash
+      run: |
+        agentgit diff ${{ inputs.diff-base }} ${{ inputs.version }} --format markdown > agentgit_diff.md
