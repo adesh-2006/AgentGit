@@ -32,6 +32,8 @@ from agentgit.export import export_snapshot
 from agentgit.lint import lint_prompt
 from agentgit.matrix import build_comparison_matrix
 from agentgit.mock import create_mock_agent, record_fixtures
+from agentgit.otel import export_otel_json, export_to_otel_spans
+from agentgit.remote import add_remote, pull_snapshot, push_snapshot
 from agentgit.replay import get_task_trace
 from agentgit.report import diff_to_html, diff_to_markdown
 from agentgit.snapshot import create_snapshot as snapshot
@@ -60,6 +62,11 @@ __all__ = [
     "analyze_drift",
     "predict_production_cost",
     "export_snapshot",
+    "export_to_otel_spans",
+    "export_otel_json",
+    "add_remote",
+    "push_snapshot",
+    "pull_snapshot",
     "start_ui",
     "AgentGitStore",
 ]

@@ -432,24 +432,97 @@ def cost_predict_cmd(ctx: click.Context, version: str, dau: int, requests: int) 
 
 @cli.command("export")
 @click.argument("version")
-@click.option("--format", "-f", type=click.Choice(["csv", "jsonl", "json"]), default="csv", help="Output format.")
+@click.option("--format", "-f", type=click.Choice(["csv", "jsonl", "json", "otel"]), default="csv", help="Output format.")
 @click.option("--output", "-o", default=None, help="Output destination file path.")
 @click.pass_context
 def export_cmd(ctx: click.Context, version: str, format: str, output: str | None) -> None:
-    """Export snapshot tasks and metrics to CSV, JSONL, or JSON."""
-    from agentgit.export import export_snapshot
+    """Export snapshot tasks and metrics to CSV, JSONL, JSON, or OpenTelemetry (OTel)."""
     store = _store(ctx)
     if not store.is_initialised:
         console.print("[red]Error:[/red] Not an AgentGit project. Run `agentgit init` first.")
         raise SystemExit(1)
 
     try:
-        out_path = export_snapshot(store, version, format=format, output_path=output)  # type: ignore[arg-type]
+        if format == "otel":
+            from agentgit.otel import export_otel_json
+            out_dest = output or f"{version}_otel.json"
+            out_path = export_otel_json(store, version, out_dest)
+        else:
+            from agentgit.export import export_snapshot
+            out_path = export_snapshot(store, version, format=format, output_path=output)  # type: ignore[arg-type]
     except FileNotFoundError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise SystemExit(1)
 
     console.print(f"[bold green]✅ Snapshot '{version}' exported to {out_path}[/bold green]")
+
+
+# ------------------------------------------------------------------
+# remote, push, pull
+# ------------------------------------------------------------------
+
+@cli.group("remote")
+def remote_group() -> None:
+    """Manage remote team snapshot registries."""
+    pass
+
+
+@remote_group.command("add")
+@click.argument("name")
+@click.argument("url")
+@click.pass_context
+def remote_add_cmd(ctx: click.Context, name: str, url: str) -> None:
+    """Add a new remote team registry (directory, s3://, or http://)."""
+    from agentgit.remote import add_remote
+    store = _store(ctx)
+    add_remote(store, name, url)
+    console.print(f"[bold green]✅ Remote '{name}' added -> {url}[/bold green]")
+
+
+@remote_group.command("list")
+@click.pass_context
+def remote_list_cmd(ctx: click.Context) -> None:
+    """List all configured remote registries."""
+    from agentgit.remote import get_remotes
+    store = _store(ctx)
+    remotes = get_remotes(store)
+    if not remotes:
+        console.print("[dim]No remotes configured. Use `agentgit remote add <name> <url>`[/dim]")
+        return
+    for name, url in remotes.items():
+        console.print(f"[bold cyan]{name}[/bold cyan]\t{url}")
+
+
+@cli.command("push")
+@click.argument("remote")
+@click.argument("version")
+@click.pass_context
+def push_cmd(ctx: click.Context, remote: str, version: str) -> None:
+    """Push a snapshot to a remote team registry."""
+    from agentgit.remote import push_snapshot
+    store = _store(ctx)
+    try:
+        msg = push_snapshot(store, remote, version)
+        console.print(f"[bold green]✅ {msg}[/bold green]")
+    except (ValueError, FileNotFoundError) as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
+
+
+@cli.command("pull")
+@click.argument("remote")
+@click.argument("version")
+@click.pass_context
+def pull_cmd(ctx: click.Context, remote: str, version: str) -> None:
+    """Pull a snapshot from a remote team registry."""
+    from agentgit.remote import pull_snapshot
+    store = _store(ctx)
+    try:
+        snap = pull_snapshot(store, remote, version)
+        console.print(f"[bold green]✅ Pulled '{snap.version}' from remote '{remote}'[/bold green]")
+    except (ValueError, FileNotFoundError) as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
 
 
 # ------------------------------------------------------------------

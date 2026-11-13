@@ -1,0 +1,71 @@
+{
+  "name": "agentgit-vscode",
+  "displayName": "AgentGit: Git for AI Agent Behavior",
+  "description": "Visual behavioral diffs, prompt linting, and regression tracking for AI agents right inside VS Code.",
+  "version": "0.1.0",
+  "publisher": "adesh",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Programming Languages",
+    "Testing",
+    "Linters"
+  ],
+  "keywords": [
+    "ai",
+    "agents",
+    "llm",
+    "testing",
+    "eval",
+    "prompt-engineering"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "agentgit.diff",
+        "title": "AgentGit: Show Behavioral Diff",
+        "category": "AgentGit"
+      },
+      {
+        "command": "agentgit.lint",
+        "title": "AgentGit: Lint Current Prompt File",
+        "category": "AgentGit"
+      },
+      {
+        "command": "agentgit.dashboard",
+        "title": "AgentGit: Open Web Dashboard",
+        "category": "AgentGit"
+      },
+      {
+        "command": "agentgit.snapshots",
+        "title": "AgentGit: List Snapshots",
+        "category": "AgentGit"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "agentgit.lint",
+          "when": "editorTextFocus",
+          "group": "AgentGit"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -402,10 +402,37 @@ AgentGit doesn't change how your agent works. It just observes and measures.
 - [x] Tabular trajectory exporter for data science (`agentgit export` to CSV / JSONL)
 - [x] Standard benchmark datasets (`agentgit/benchmarks/general_qa.json`, `tool_calling.json`)
 
-### 🔮 Future Horizons (v0.2.0+)
-- [ ] VS Code Extension for live inline prompt behavioral diffs
-- [ ] Cloud-hosted remote team registry (S3 / PostgreSQL backend)
-- [ ] Native OpenTelemetry distributed span exporter
+### ✅ Phase 4: Enterprise, Remote Registry & Ecosystem (Completed)
+- [x] Native OpenTelemetry & OpenInference distributed span exporter (`agentgit/otel.py`)
+- [x] Remote team registry & cloud sharing (`agentgit remote`, `push`, `pull`)
+- [x] Official VS Code Extension (`vscode-extension/`)
+
+---
+
+## 🌐 Remote Team Registries & OpenTelemetry
+
+### 🤝 Team Snapshot Sharing (`agentgit remote`, `push`, `pull`)
+Share behavioral snapshots across distributed engineering teams and CI/CD runners:
+```bash
+# Register a team shared registry:
+agentgit remote add origin /shared/team_storage/agentgit
+
+# Push your snapshot:
+agentgit push origin v1.0
+
+# Teammates can pull and diff against your baseline:
+agentgit pull origin v1.0
+agentgit diff v1.0 v2.0
+```
+
+### 📡 OpenTelemetry / OpenInference Integration
+Export multi-step agent trajectories into OTLP-compliant spans for Datadog, Jaeger, or Arize Phoenix:
+```bash
+agentgit export v1.0 --format otel -o traces.json
+```
+
+### 💻 VS Code Extension
+Inspect prompt lint warnings and trigger visual behavioral diffs directly from your editor. See [`vscode-extension/`](vscode-extension/) for extension installation and usage.
 
 ---
 

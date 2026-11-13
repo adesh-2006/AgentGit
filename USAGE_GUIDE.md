@@ -142,5 +142,9 @@ jobs:
 | **Production token bill forecast** | `agentgit cost-predict <version> --dau <n>` |
 | **Semantic drift & contradiction check** | `agentgit drift <v1> <v2>` |
 | **Export data to CSV/JSONL** | `agentgit export <version> --format csv` |
+| **Export to OpenTelemetry (OTel)** | `agentgit export <version> --format otel` |
+| **Add team remote registry** | `agentgit remote add <name> <url_or_path>` |
+| **Push snapshot to team registry** | `agentgit push <remote> <version>` |
+| **Pull snapshot from team registry** | `agentgit pull <remote> <version>` |
 | **Interactive local web UI** | `agentgit ui --port 8585` |
 | **Rollback active version** | `agentgit rollback <version>` |
