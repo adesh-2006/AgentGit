@@ -25,8 +25,13 @@ __version__ = "0.1.0"
 from agentgit.bisect import bisect_metric
 from agentgit.blame import blame_metric
 from agentgit.ci import ci_check
+from agentgit.cost import predict_production_cost
 from agentgit.diff import create_diff as diff
+from agentgit.drift import analyze_drift
+from agentgit.export import export_snapshot
+from agentgit.lint import lint_prompt
 from agentgit.matrix import build_comparison_matrix
+from agentgit.mock import create_mock_agent, record_fixtures
 from agentgit.replay import get_task_trace
 from agentgit.report import diff_to_html, diff_to_markdown
 from agentgit.snapshot import create_snapshot as snapshot
@@ -46,6 +51,12 @@ __all__ = [
     "bisect_metric",
     "build_comparison_matrix",
     "get_task_trace",
+    "record_fixtures",
+    "create_mock_agent",
+    "lint_prompt",
+    "analyze_drift",
+    "predict_production_cost",
+    "export_snapshot",
     "start_ui",
     "AgentGitStore",
 ]

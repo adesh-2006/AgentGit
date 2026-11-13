@@ -658,3 +658,101 @@ def print_bisect_report(b: Any) -> None:
     console.print(table)
     console.print(Panel(f"[bold]{b.explanation}[/bold]", border_style="red" if b.culprit_version else "green", padding=(0, 2)))
     console.print()
+
+
+# ---------------------------------------------------------------------------
+# Lint report
+# ---------------------------------------------------------------------------
+
+def print_lint_report(r: Any) -> None:
+    """Print static prompt lint results."""
+    table = Table(
+        title=f"Agent Contract Lint: {r.target_name} (Score: {r.score}/100)",
+        show_header=True,
+        header_style="bold cyan",
+        border_style="blue",
+    )
+    table.add_column("Level", justify="center", width=10)
+    table.add_column("Code", style="dim", width=22)
+    table.add_column("Issue & Suggestion", style="white")
+
+    for i in r.issues:
+        level_style = "bold red" if i.level == "ERROR" else ("bold yellow" if i.level == "WARNING" else "cyan")
+        text = f"{i.message}\n[dim]↳ Fix: {i.suggestion}[/dim]" if i.suggestion else i.message
+        table.add_row(f"[{level_style}]{i.level}[/{level_style}]", i.code, text)
+
+    score_color = "green" if r.score >= 80 else ("yellow" if r.score >= 50 else "red")
+    summary = f"Quality Score: [{score_color}]{r.score}/100[/{score_color}] • {r.errors} Error(s), {r.warnings} Warning(s)"
+
+    console.print()
+    if r.issues:
+        console.print(table)
+    console.print(Panel(summary, border_style=score_color, padding=(0, 2)))
+    console.print()
+
+
+# ---------------------------------------------------------------------------
+# Drift report
+# ---------------------------------------------------------------------------
+
+def print_drift_report(d: Any) -> None:
+    """Print semantic drift analysis."""
+    table = Table(
+        title=f"Semantic Drift: {d.from_version} → {d.to_version}",
+        show_header=True,
+        header_style="bold cyan",
+        border_style="blue",
+    )
+    table.add_column("Task #", justify="right", width=8)
+    table.add_column("Similarity", justify="right", width=12)
+    table.add_column("Length Δ", justify="right", width=12)
+    table.add_column("Observations", style="white")
+
+    for t in d.tasks:
+        sim_color = "green" if t.lexical_similarity >= 0.7 else ("yellow" if t.lexical_similarity >= 0.4 else "red")
+        ratio_str = f"{t.length_ratio:.1f}x"
+        table.add_row(
+            str(t.task_index + 1),
+            f"[{sim_color}]{t.lexical_similarity:.0%}[/{sim_color}]",
+            ratio_str,
+            t.description,
+        )
+
+    console.print()
+    console.print(table)
+    console.print(Panel(f"[bold]{d.verdict}[/bold]", border_style="yellow" if d.contradiction_count else "green", padding=(0, 2)))
+    console.print()
+
+
+# ---------------------------------------------------------------------------
+# Cost forecast report
+# ---------------------------------------------------------------------------
+
+def print_cost_report(f: Any) -> None:
+    """Print production cost forecast."""
+    table = Table(
+        title=f"Production Cost Forecast ({f.version}) — {f.monthly_requests:,} Req/Mo",
+        show_header=True,
+        header_style="bold cyan",
+        border_style="blue",
+    )
+    table.add_column("Model", style="bold")
+    table.add_column("Est. Monthly Cost", justify="right")
+    table.add_column("Cost / 1k Req", justify="right")
+    table.add_column("Monthly Savings", justify="right", style="bold green")
+
+    for alt in f.alternative_models:
+        is_current = alt.model_name in f.model.lower()
+        model_label = f"{alt.model_name} [dim](current)[/dim]" if is_current else alt.model_name
+        savings_s = f"${alt.savings_vs_current:,.2f} ({alt.savings_pct:+.0f}%)" if not is_current else "—"
+        table.add_row(
+            model_label,
+            f"${alt.monthly_cost_usd:,.2f}",
+            f"${alt.cost_per_1k_requests:.3f}",
+            savings_s,
+        )
+
+    console.print()
+    console.print(table)
+    console.print(Panel(f"[bold]{f.recommendation}[/bold]", border_style="green", padding=(0, 2)))
+    console.print()

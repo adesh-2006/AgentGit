@@ -206,6 +206,42 @@ agentgit replay v2.0 1
 ### 🖥️ `agentgit ui` — Zero-Dependency Local Web Dashboard
 Run `agentgit ui` to launch a local dashboard to visually explore trends, compare snapshots, and inspect task failures. No external node/npm dependencies needed.
 
+### 🛡️ `agentgit lint` — Static Prompt & Contract Linter
+Catch contradictory rules, missing length constraints, and prompt injection vulnerabilities before making a single API call:
+```bash
+agentgit lint examples/prompt_example.txt
+```
+
+### 🧠 `agentgit drift` — Semantic Drift & Contradiction Detector
+Detect whether free-form textual answers drifted, expanded, or flipped polarities (e.g., approved vs. rejected):
+```bash
+agentgit drift v1.0 v2.0
+```
+
+### 💰 `agentgit cost-predict` — Production Bill Simulator
+Forecast your monthly API bill at scale and discover cost-saving model alternatives:
+```bash
+agentgit cost-predict v1.0 --dau 10000 --requests 5
+```
+
+### 📼 Offline VCR Fixture Replay
+Record real responses once, and run your CI/CD test suite 10,000 times offline in milliseconds with **$0 token spend**:
+```python
+from agentgit.mock import record_fixtures, create_mock_agent
+
+# Record once
+record_fixtures(my_agent, tasks=test_tasks, fixture_name="test-run")
+
+# Replay offline forever
+mock_agent = create_mock_agent("test-run")
+```
+
+### 📤 `agentgit export` — CSV, JSONL & Analytics Export
+Export complete trajectory logs to CSV or JSONL for data teams, Pandas, and BI dashboards:
+```bash
+agentgit export v2.0 --format csv -o benchmark_results.csv
+```
+
 ---
 
 ## 🤖 Official GitHub Action

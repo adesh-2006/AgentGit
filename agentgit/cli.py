@@ -29,7 +29,10 @@ from agentgit.report import (
     print_bisect_report,
     print_blame_report,
     print_ci_report,
+    print_cost_report,
     print_diff_report,
+    print_drift_report,
+    print_lint_report,
     print_matrix_report,
     print_replay_report,
     print_snapshot_list,
@@ -355,6 +358,98 @@ def ui_cmd(ctx: click.Context, port: int, no_browser: bool) -> None:
     from agentgit.ui import start_ui
     project = ctx.obj.get("project", ".")
     start_ui(project_path=project, port=port, open_browser=not no_browser)
+
+
+# ------------------------------------------------------------------
+# lint
+# ------------------------------------------------------------------
+
+@cli.command("lint")
+@click.argument("prompt_file", type=click.Path(exists=True))
+@click.pass_context
+def lint_cmd(ctx: click.Context, prompt_file: str) -> None:
+    """Run static contract & injection lint rules on PROMPT_FILE."""
+    from agentgit.lint import lint_prompt
+    content = Path(prompt_file).read_text(encoding="utf-8")
+    report = lint_prompt(content, target_name=Path(prompt_file).name)
+    print_lint_report(report)
+
+
+# ------------------------------------------------------------------
+# drift
+# ------------------------------------------------------------------
+
+@cli.command("drift")
+@click.argument("version_a")
+@click.argument("version_b")
+@click.pass_context
+def drift_cmd(ctx: click.Context, version_a: str, version_b: str) -> None:
+    """Detect textual & semantic drift between two snapshot outputs."""
+    from agentgit.drift import analyze_drift
+    store = _store(ctx)
+    if not store.is_initialised:
+        console.print("[red]Error:[/red] Not an AgentGit project. Run `agentgit init` first.")
+        raise SystemExit(1)
+
+    try:
+        report = analyze_drift(store, version_a, version_b)
+    except FileNotFoundError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
+
+    print_drift_report(report)
+
+
+# ------------------------------------------------------------------
+# cost-predict
+# ------------------------------------------------------------------
+
+@cli.command("cost-predict")
+@click.argument("version")
+@click.option("--dau", default=1000, help="Daily Active Users (default: 1000).")
+@click.option("--requests", "-r", default=5, help="Requests per user per day (default: 5).")
+@click.pass_context
+def cost_predict_cmd(ctx: click.Context, version: str, dau: int, requests: int) -> None:
+    """Simulate production token bills and model trade-offs for VERSION."""
+    from agentgit.cost import predict_production_cost
+    store = _store(ctx)
+    if not store.is_initialised:
+        console.print("[red]Error:[/red] Not an AgentGit project. Run `agentgit init` first.")
+        raise SystemExit(1)
+
+    try:
+        forecast = predict_production_cost(store, version, dau=dau, requests_per_user=requests)
+    except FileNotFoundError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
+
+    print_cost_report(forecast)
+
+
+# ------------------------------------------------------------------
+# export
+# ------------------------------------------------------------------
+
+@cli.command("export")
+@click.argument("version")
+@click.option("--format", "-f", type=click.Choice(["csv", "jsonl", "json"]), default="csv", help="Output format.")
+@click.option("--output", "-o", default=None, help="Output destination file path.")
+@click.pass_context
+def export_cmd(ctx: click.Context, version: str, format: str, output: str | None) -> None:
+    """Export snapshot tasks and metrics to CSV, JSONL, or JSON."""
+    from agentgit.export import export_snapshot
+    store = _store(ctx)
+    if not store.is_initialised:
+        console.print("[red]Error:[/red] Not an AgentGit project. Run `agentgit init` first.")
+        raise SystemExit(1)
+
+    try:
+        out_path = export_snapshot(store, version, format=format, output_path=output)  # type: ignore[arg-type]
+    except FileNotFoundError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
+
+    console.print(f"[bold green]✅ Snapshot '{version}' exported to {out_path}[/bold green]")
 
 
 # ------------------------------------------------------------------
