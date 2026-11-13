@@ -9,9 +9,9 @@ This demonstrates the core workflow:
 """
 
 from agentgit import track
-from agentgit.snapshot import create_snapshot
 from agentgit.diff import create_diff
-from agentgit.report import print_snapshot_report, print_diff_report
+from agentgit.report import print_diff_report, print_snapshot_report
+from agentgit.snapshot import create_snapshot
 
 
 # Step 1: Define your agent (any callable)
@@ -29,7 +29,7 @@ def my_agent_v2(task: str) -> str:
     """V2 — more thorough but slower."""
     import time
     time.sleep(0.01)  # Simulating more processing
-    
+
     if "summarize" in task.lower():
         return f"Detailed Summary: After careful review, {task[:80]}... Key points: 1) Growth 2) Stability"
     elif "analyze" in task.lower():

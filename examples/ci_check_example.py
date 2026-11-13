@@ -5,9 +5,9 @@ based on behavioral thresholds.
 """
 
 from agentgit import track
-from agentgit.snapshot import create_snapshot
-from agentgit.ci import parse_rules, ci_check
+from agentgit.ci import ci_check, parse_rules
 from agentgit.report import print_ci_report
+from agentgit.snapshot import create_snapshot
 
 
 # A production agent
